@@ -5,9 +5,6 @@ import { Button } from "@/components/ui/button";
 import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
 import { googleAuth } from "@/hooks/useOAuth";
 import { useRouter } from "next/navigation";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 function HomePage() {
   const router = useRouter();
