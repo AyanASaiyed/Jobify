@@ -18,7 +18,7 @@ function HomePage() {
         const token = res.data.token;
         const obj = { email, name, image, token };
         localStorage.setItem("user-info", JSON.stringify(obj));
-        console.log("res.data.user: ", res.data.user);
+        //console.log("res.data.user: ", res.data.user);
         router.push("/home");
       }
     } catch (error) {

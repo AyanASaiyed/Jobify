@@ -4,9 +4,16 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
+interface UserInfo {
+  image: string;
+  name: string;
+  email: string;
+}
+
 const DashboardPage = () => {
-  const [userInfo, setUserInfo] = useState(null);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const router = useRouter();
+
   const handleLogout = () => {
     localStorage.removeItem("user-info");
     router.push("/");
@@ -20,7 +27,7 @@ const DashboardPage = () => {
 
   return (
     <main className="flex flex-col justify-center items-center">
-      <div className="h-[8vh] bg-zinc-900 w-screen top-0 -z-10 flex items-center">
+      <div className="h-[8vh] bg-zinc-900 w-screen top-0 flex items-center">
         <img
           src={userInfo?.image}
           className="rounded-xl mr-10 ml-10 h-[6vh] shadow-lg shadow-black"
