@@ -11,6 +11,8 @@
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.1",
     "@react-oauth/google": "^0.12.1",
+    "@types/gapi": "^0.0.47",
+    "@types/gapi.client.gmail": "^1.0.5",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

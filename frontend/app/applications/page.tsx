@@ -9,43 +9,89 @@ interface UserInfo {
   image: string;
   name: string;
   email: string;
+  token: string;
 }
-
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 
 const ApplicationsPage = () => {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-  const [messages, setMessages] = useState([]);
+  const [emails, setEmails] = useState<any[]>([]);
   const router = useRouter();
+
+  // Load Google API
+  useEffect(() => {
+    const loadGapi = () => {
+      gapi.load("client", () => {
+        console.log("Google API loaded.");
+      });
+    };
+    loadGapi();
+  }, []);
+
+  // Initialize Google API client
+  const initClient = async (token: string) => {
+    try {
+      await gapi.client.init({
+        clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        discoveryDocs: [
+          "https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest",
+        ],
+        scope: "https://www.googleapis.com/auth/gmail.readonly",
+      });
+
+      // Set the access token
+      gapi.client.setToken({ access_token: token });
+      console.log("Google API initialized with token.");
+    } catch (error) {
+      console.error("Error initializing Google API client:", error);
+    }
+  };
+
+  // Fetch Emails from Gmail API
+  const fetchEmails = async (token: string) => {
+    try {
+      console.log("Fetching emails with token:", token);
+      const response = await fetch(
+        "https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorResponse = await response.json();
+        console.error("Gmail API Error:", errorResponse);
+        throw new Error(errorResponse.error.message);
+      }
+
+      const data = await response.json();
+      setEmails(data.messages || []);
+    } catch (error) {
+      console.error("Failed to fetch emails:", error);
+    }
+  };
+
+  useEffect(() => {
+    const data = localStorage.getItem("user-info");
+    if (!data) {
+      router.push("/");
+      return;
+    }
+
+    const user = JSON.parse(data);
+    setUserInfo(user);
+
+    if (user?.token) {
+      initClient(user.token).then(() => fetchEmails(user.token));
+    }
+  }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem("user-info");
     router.push("/");
   };
-
-  const fetchMessages = async (token: string) => {
-    gapi.load("client", async () => {
-      await gapi.client.init({
-        apiKey: API_KEY,
-        discoveryDocs: [
-          "https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest",
-        ],
-      });
-
-      const res = await gapi.client.gmail.users.messages.list({
-        userId: "me",
-        access_token: token,
-      });
-
-      console.log("GMAIL api res: ", res);
-    });
-  };
-
-  useEffect(() => {
-    const data = localStorage.getItem("user-info");
-    const user = data ? JSON.parse(data) : {};
-    setUserInfo(user);
-  }, []);
 
   return (
     <main className="flex flex-col min-h-screen">
@@ -66,7 +112,19 @@ const ApplicationsPage = () => {
       </div>
 
       <section className="flex items-center justify-center flex-grow">
-        <div className="h-[80vh] w-[80vw] bg-zinc-900 rounded-xl shadow-2xl shadow-zinc-600"></div>
+        <div className="h-[80vh] w-[80vw] bg-zinc-900 rounded-xl shadow-2xl shadow-zinc-600 p-4 overflow-y-auto">
+          {emails.length > 0 ? (
+            <ul>
+              {emails.map((email, index) => (
+                <li key={index} className="text-white p-2 border-b border-zinc-700">
+                  Email ID: {email.id}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-white text-center">No emails found.</p>
+          )}
+        </div>
       </section>
     </main>
   );
