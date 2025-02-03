@@ -19,6 +19,12 @@ const DashboardPage = () => {
     router.push("/");
   };
 
+  const routeApplications = () => {
+    const data = localStorage.getItem("user-info");
+    const userData = data ? JSON.parse(data) : {};
+    
+  };
+
   useEffect(() => {
     const data = localStorage.getItem("user-info");
     const userData = data ? JSON.parse(data) : {};
@@ -44,7 +50,10 @@ const DashboardPage = () => {
       </div>
 
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 p-40 w-full max-w-5xl">
-        <div className="bg-gray-800 rounded-xl shadow-lg text-white font-mono text-2xl text-center h-[30vh] flex items-center justify-center hover:bg-zinc-900 hover:text-blue-400 hover:shadow-blue-400 hover:text-3xl">
+        <div
+          onClick={() => router.push("/applications")}
+          className="bg-gray-800 rounded-xl shadow-lg text-white font-mono text-2xl text-center h-[30vh] flex items-center justify-center hover:bg-zinc-900 hover:text-blue-400 hover:shadow-blue-400 hover:text-3xl"
+        >
           Applications📰
         </div>
         <div className="bg-gray-800 rounded-xl shadow-md text-white font-mono text-2xl text-center h-[30vh] flex items-center justify-center hover:bg-zinc-900 hover:text-blue-400 hover:shadow-blue-400 hover:text-3xl">
