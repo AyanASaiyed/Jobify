@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
 import { googleAuth } from "@/hooks/useOAuth";
 import { useRouter } from "next/navigation";
+import { gapi } from "gapi-script";
 
 function HomePage() {
   const router = useRouter();
@@ -15,9 +16,13 @@ function HomePage() {
         console.log("Authorization code:", authResult.code);
         const res = await googleAuth(authResult.code);
         const { email, name, image } = res.data.user;
+        const googleAccessToken = res.data.googleAccessToken;
         const token = res.data.token;
-        const obj = { email, name, image, token };
+        const obj = { email, name, image, token, googleAccessToken };
         localStorage.setItem("user-info", JSON.stringify(obj));
+        gapi.load("auth", function () {
+          gapi.auth.init(() => {});
+        });
         router.push("/home");
       }
     } catch (error) {
@@ -28,7 +33,7 @@ function HomePage() {
   const googleLogin = useGoogleLogin({
     onSuccess: responseGoogle,
     onError: responseGoogle,
-    scope: "https://www.googleapis.com/auth/gmail.readonly",
+    scope: "https://www.googleapis.com/auth/gmail.readonly", // Correct Gmail scope
     flow: "auth-code",
   });
 
@@ -39,6 +44,7 @@ function HomePage() {
         A personal Job Application Tracking System using Gmail and Cohere AI
         API.
       </h2>
+      <div data-onsuccess=""></div>
       <Button className="text-white mt-5" onClick={() => googleLogin()}>
         <Mail /> Login with Gmail
       </Button>

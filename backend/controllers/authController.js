@@ -36,7 +36,14 @@ export const googleLogin = async (req, res) => {
       expiresIn: process.env.JWT_TIMEOUT,
     });
 
-    return res.status(200).json({ message: "success", token, user });
+    return res
+      .status(200)
+      .json({
+        message: "success",
+        token,
+        user,
+        googleAccessToken: googleRes.tokens.access_token,
+      });
   } catch (error) {
     console.log("Error in googleLogin endpoint: ", error);
     return res.status(500).json({ "Internal Server Error": error });

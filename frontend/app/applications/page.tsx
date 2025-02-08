@@ -17,49 +17,34 @@ const ApplicationsPage = () => {
   const [emails, setEmails] = useState<any[]>([]);
   const router = useRouter();
 
-  // Load Google API
   useEffect(() => {
-    const loadGapi = () => {
-      gapi.load("client", () => {
-        console.log("Google API loaded.");
-      });
-    };
-    loadGapi();
-  }, []);
-
-  // Initialize Google API client
-  const initClient = async (token: string) => {
-    try {
-      await gapi.client.init({
-        clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-        discoveryDocs: [
-          "https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest",
-        ],
-        scope: "https://www.googleapis.com/auth/gmail.readonly",
-      });
-
-      // Set the access token
-      gapi.client.setToken({ access_token: token });
-      console.log("Google API initialized with token.");
-    } catch (error) {
-      console.error("Error initializing Google API client:", error);
+    const data = localStorage.getItem("user-info");
+    if (!data) {
+      router.push("/");
+      return;
     }
-  };
+    const user = JSON.parse(data);
+    setUserInfo(user);
+    fetchEmails(user.googleAccessToken);
+  }, [router]);
 
-  // Fetch Emails from Gmail API
   const fetchEmails = async (token: string) => {
     try {
-      console.log("Fetching emails with token:", token);
+      console.log("Token before API call:", token);
+  
       const response = await fetch(
-        "https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10",
+        "https://gmail.googleapis.com/gmail/v1/users/me/messages",
         {
+          method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            Accept: "application/json",
           },
         }
       );
-
+  
+      console.log("Response Status:", response.status);
+  
       if (!response.ok) {
         const errorResponse = await response.json();
         console.error("Gmail API Error:", errorResponse);
@@ -67,26 +52,13 @@ const ApplicationsPage = () => {
       }
 
       const data = await response.json();
+      console.log("Emails fetched:", data);
       setEmails(data.messages || []);
     } catch (error) {
       console.error("Failed to fetch emails:", error);
     }
   };
-
-  useEffect(() => {
-    const data = localStorage.getItem("user-info");
-    if (!data) {
-      router.push("/");
-      return;
-    }
-
-    const user = JSON.parse(data);
-    setUserInfo(user);
-
-    if (user?.token) {
-      initClient(user.token).then(() => fetchEmails(user.token));
-    }
-  }, [router]);
+  
 
   const handleLogout = () => {
     localStorage.removeItem("user-info");
@@ -114,10 +86,13 @@ const ApplicationsPage = () => {
       <section className="flex items-center justify-center flex-grow">
         <div className="h-[80vh] w-[80vw] bg-zinc-900 rounded-xl shadow-2xl shadow-zinc-600 p-4 overflow-y-auto">
           {emails.length > 0 ? (
-            <ul>
+            <ul className="">
               {emails.map((email, index) => (
-                <li key={index} className="text-white p-2 border-b border-zinc-700">
-                  Email ID: {email.id}
+                <li
+                  key={index}
+                  className="text-white p-2 border-b border-zinc-700"
+                >
+                  Email ID: {email.messages}
                 </li>
               ))}
             </ul>
