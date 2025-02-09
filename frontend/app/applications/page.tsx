@@ -31,7 +31,7 @@ const ApplicationsPage = () => {
   const fetchEmails = async (token: string) => {
     try {
       console.log("Token before API call:", token);
-  
+
       const response = await fetch(
         "https://gmail.googleapis.com/gmail/v1/users/me/messages",
         {
@@ -42,9 +42,9 @@ const ApplicationsPage = () => {
           },
         }
       );
-  
+
       console.log("Response Status:", response.status);
-  
+
       if (!response.ok) {
         const errorResponse = await response.json();
         console.error("Gmail API Error:", errorResponse);
@@ -53,12 +53,28 @@ const ApplicationsPage = () => {
 
       const data = await response.json();
       console.log("Emails fetched:", data);
-      setEmails(data.messages || []);
+      const messages = data.messages || [];
+      const fullMessage = await Promise.all(
+        messages.map(async (msg: any) => {
+          const message = await fetch(
+            `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json",
+              },
+            }
+          );
+          const messageData = await message.json();
+          return messageData;
+        })
+      );
+      setEmails(fullMessage);
     } catch (error) {
       console.error("Failed to fetch emails:", error);
     }
   };
-  
 
   const handleLogout = () => {
     localStorage.removeItem("user-info");
@@ -92,7 +108,11 @@ const ApplicationsPage = () => {
                   key={index}
                   className="text-white p-2 border-b border-zinc-700"
                 >
-                  Email ID: {email.messages}
+                  <strong>
+                    {email.payload.headers.find(
+                      (h: any) => h.name === "Subject"
+                    )?.value || "No Subject"}
+                  </strong>
                 </li>
               ))}
             </ul>
